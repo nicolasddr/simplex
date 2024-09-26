@@ -85,18 +85,20 @@ def imprimir_tabela():
 
 # Retorna a variável que deve entrar na base
 def entra_na_base():
-    pivot = min(c)
+    pivot = min(tabela[0][:-1])
     num_var = c.index(pivot) + 1
     print(f"Variável {num_var} deve entrar na base. Possui valor {pivot}")
     return num_var # Índice = num_var-1
 
 def sai_da_base(var_entrando):
     results = {}
-    for i in range(m_rest):
-        if A[i][var_entrando-1] > 0:
-            div = b[i]/A[i][var_entrando-1]
-            results[i] = div
-    indice = min(results, key=results.get)
+    for i in range(1, m_rest+1):
+        print(i)
+        if tabela[i][var_entrando-1] > 0:
+            div = tabela[i][-1]/tabela[i][var_entrando-1]
+            print(div)
+            results[i-1] = div # 'i-1' pq i começa em 1
+        indice = min(results, key=results.get)
     
     print(f"Variável {B[indice]} sai da base")
     return B[indice]
