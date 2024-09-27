@@ -83,29 +83,32 @@ def imprimir_tabela():
             print(f"{valor:<8.3f}", end="")
         print(f"{linha[-1]:<8.3f}")  
 
-
+# PROBLEMA
 def entra_na_base():
     # Pega a linha da função objetivo, excluindo a última coluna (coluna b)
-    linha_objetivo = tabela[0][:-1]
+    linha_objetivo = tabela[0][:-1]  # Assumindo que a primeira linha é a função objetivo
     
-    # Inicializa 'pivot' com um valor que será atualizado
-    pivot = None
-    indice = -1
+    menor_val = float('inf')  # Inicializa com um valor muito grande
+    indice = -1  # Índice da variável que deve entrar na base
 
     # Itera sobre todas as variáveis da linha da função objetivo
     for i in range(len(linha_objetivo)):
-        if linha_objetivo[i] < 0 and (i + 1) not in B:  # Verifica se não está na base
-            if pivot is None or linha_objetivo[i] < pivot:  # Se encontrar um valor menor
-                pivot = linha_objetivo[i]
+        # Considera apenas coeficientes negativos que não estão na base
+        if linha_objetivo[i] < 0 and (i + 1) not in B:  # (i + 1) é usado para verificar o índice 1-based
+            if linha_objetivo[i] < menor_val:  # Se encontrar um valor menor
+                menor_val = linha_objetivo[i]  # Atualiza menor_val
                 indice = i  # Armazena o índice da variável que deve entrar na base
 
+    # Se nenhum índice foi encontrado, retorna None
     if indice == -1:
         print("Nenhuma variável pode entrar na base.")
         return None
 
-    num_var = indice + 1
-    print(f"Variável {num_var} deve entrar na base. Possui valor {pivot}. Indice={indice}")
+    num_var = indice + 1  # Converte para índice 1-based
+    print(f"Variável {num_var} deve entrar na base. Possui valor {menor_val}. Indice={indice}")
     return indice
+
+
 
 
 def sai_da_base(indice_var_entrando):
@@ -116,18 +119,21 @@ def sai_da_base(indice_var_entrando):
     for i in range(1, m_rest + 1):  # Loop começa em 1 para ignorar a função objetivo
         if tabela[i][indice_var_entrando] > 0:  # Só consideramos coeficientes positivos
             div = tabela[i][-1] / tabela[i][indice_var_entrando]  # Calcula a razão
-            
             # Verifica se esta divisão é a menor até agora
+            print(f"{tabela[i][-1]}/{tabela[i][indice_var_entrando]}")
             if div < menor_div:
                 menor_div = div
-                indice_menor_div = i  # Armazena o índice da menor razão
+                indice_menor_div = i-1  # Armazena o índice da menor razão
             
             # Armazena no dicionário, se quiser usar depois
-            results[i - 1] = div  # Usa 'i-1' para ajustar o índice 
-    
+            results[i - 1] = div  # Usa 'i-1' para ajustar o índice
     indice = indice_menor_div  # Índice da variável que vai sair da base
-    print(f"Variável {B[indice]} sai da base. Índice={indice}")
-    return indice
+    if indice != -1:
+        print(f"Variável {B[indice]} sai da base. Índice={indice}")
+        return indice
+    else:
+        print(f"Base=None")
+        return None
 
 
 def nova_linha(linha, entrando, linha_pivot):
@@ -166,8 +172,15 @@ def calcular():
         return False  # Interrompe o cálculo e indica falha
 
     # Encontrar a variável que deve sair da base
-    indice_var_saindo = sai_da_base(indice_var_entrando) + 1
+    indice_var_saindo = sai_da_base(indice_var_entrando)
 
+    if indice_var_saindo is None:
+        print("Nenhuma variável pode sair da base. O processo foi interrompido.")
+        print(f"RHS = {tabela[0][-1]}")
+        return False  # Interrompe o cálculo e indica falha
+
+    indice_var_saindo += 1
+    
     # Copiar a linha pivô antes de alterar
     linha_pivot = tabela[indice_var_saindo]
 
@@ -213,16 +226,18 @@ def solve():
     # Verifica por que o loop foi interrompido
     if not verificar_viabilidade_base(tabela):
         print("A base se tornou inviável. O processo foi interrompido.")
+        return
     elif not negativo():
         print("A solução ótima foi encontrada. Não há mais variáveis negativas.")
+        return
     else:
         print("O processo foi interrompido pois nenhuma variável pode entrar na base.")
+        return
 
 
 
-ler_entrada('ex1.lp')
+ler_entrada('ex4.lp')
 imprimir_problema()
 solve()
-imprimir_tabela()
 
 
