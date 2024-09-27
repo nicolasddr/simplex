@@ -87,7 +87,7 @@ def imprimir_tabela():
 # Retorna a variável que deve entrar na base
 def entra_na_base():
     pivot = min(tabela[0][:-1])
-    num_var = c.index(pivot) + 1
+    num_var = tabela[0].index(pivot) + 1
     indice = num_var-1
     print(f"Variável {num_var} deve entrar na base. Possui valor {pivot}. Indice={indice}")
     return indice
@@ -98,8 +98,7 @@ def sai_da_base(indice_var_entrando):
         if tabela[i][indice_var_entrando] > 0:
             div = tabela[i][-1]/tabela[i][indice_var_entrando]
             results[i-1] = div # 'i-1' pq i começa em 1
-        indice = min(results, key=results.get)
-    
+    indice = min(results, key=results.get)
     print(f"Variável {B[indice]} sai da base. Indice={indice}")
     return indice
 
@@ -122,15 +121,43 @@ def nova_linha(linha, entrando, linha_pivot):
 def negativo():
     negative = False
     for i in range(n_var):
-        if tabela[0][i] < 0:
+        if tabela[0][i:-1] < 0:
             negative = True
     
     return negative
 
+def calcular():
+    # Encontrar a variável que deve entrar na base
+    indice_var_entrando = entra_na_base()
+    # Encontrar a variável que deve sair da base
+    indice_var_saindo = sai_da_base(indice_var_entrando) + 1
 
-ler_entrada('modelo.lp')
+    # Copiar a linha pivô antes de alterar
+    linha_pivot = tabela[indice_var_saindo]
+
+    # Escalar a linha pivô para que o pivô seja 1
+    valor_pivot = linha_pivot[indice_var_entrando]
+    linha_pivot = [x / valor_pivot for x in linha_pivot]
+    tabela[indice_var_saindo] = linha_pivot
+
+    # Ajustar as outras linhas do tableau
+    for i in range(len(tabela)):
+        if i != indice_var_saindo:
+            linha = tabela[i]
+            coef_ajuste = linha[indice_var_entrando]
+            # Ajustar a linha para zerar o coeficiente da variável que entrou na base
+            tabela[i] = [linha[j] - coef_ajuste * linha_pivot[j] for j in range(len(linha))]
+
+    # Atualizar a base com a nova variável entrante
+    B[indice_var_saindo - 1] = indice_var_entrando + 1
+
+def solve():
+    calcular()
+    imprimir_tabela()
+
+
+ler_entrada('ex1.lp')
 imprimir_problema()
-indice_var_entrando = entra_na_base()
-indice_var_saindo = sai_da_base(indice_var_entrando)
-imprimir_tabela()
+solve()
+solve()
 
