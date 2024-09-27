@@ -84,23 +84,51 @@ def imprimir_tabela():
         print(f"{linha[-1]:<8.3f}")  
 
 
-# Retorna a variável que deve entrar na base
 def entra_na_base():
-    pivot = min(tabela[0][:-1])
-    num_var = tabela[0].index(pivot) + 1
-    indice = num_var-1
+    # Pega a linha da função objetivo, excluindo a última coluna (coluna b)
+    linha_objetivo = tabela[0][:-1]
+    
+    # Inicializa 'pivot' com um valor que será atualizado
+    pivot = None
+    indice = -1
+
+    # Itera sobre todas as variáveis da linha da função objetivo
+    for i in range(len(linha_objetivo)):
+        if linha_objetivo[i] < 0 and (i + 1) not in B:  # Verifica se não está na base
+            if pivot is None or linha_objetivo[i] < pivot:  # Se encontrar um valor menor
+                pivot = linha_objetivo[i]
+                indice = i  # Armazena o índice da variável que deve entrar na base
+
+    if indice == -1:
+        print("Nenhuma variável pode entrar na base.")
+        return None
+
+    num_var = indice + 1
     print(f"Variável {num_var} deve entrar na base. Possui valor {pivot}. Indice={indice}")
     return indice
 
+
 def sai_da_base(indice_var_entrando):
-    results = {}
-    for i in range(1, m_rest+1):
-        if tabela[i][indice_var_entrando] > 0:
-            div = tabela[i][-1]/tabela[i][indice_var_entrando]
-            results[i-1] = div # 'i-1' pq i começa em 1
-    indice = min(results, key=results.get)
-    print(f"Variável {B[indice]} sai da base. Indice={indice}")
+    results = {}  # Se quiser usar no futuro, mas não é mais necessário aqui
+    menor_div = float('inf')  # Inicializa com um valor grande
+    indice_menor_div = -1  # Índice da variável que vai sair da base
+    
+    for i in range(1, m_rest + 1):  # Loop começa em 1 para ignorar a função objetivo
+        if tabela[i][indice_var_entrando] > 0:  # Só consideramos coeficientes positivos
+            div = tabela[i][-1] / tabela[i][indice_var_entrando]  # Calcula a razão
+            
+            # Verifica se esta divisão é a menor até agora
+            if div < menor_div:
+                menor_div = div
+                indice_menor_div = i  # Armazena o índice da menor razão
+            
+            # Armazena no dicionário, se quiser usar depois
+            results[i - 1] = div  # Usa 'i-1' para ajustar o índice 
+    
+    indice = indice_menor_div  # Índice da variável que vai sair da base
+    print(f"Variável {B[indice]} sai da base. Índice={indice}")
     return indice
+
 
 def nova_linha(linha, entrando, linha_pivot):
     pivot = linha[entrando] * -1
@@ -121,14 +149,22 @@ def nova_linha(linha, entrando, linha_pivot):
 def negativo():
     negative = False
     for i in range(n_var):
-        if tabela[0][i:-1] < 0:
+        if tabela[0][i] < 0:
             negative = True
     
     return negative
 
+
+
 def calcular():
     # Encontrar a variável que deve entrar na base
     indice_var_entrando = entra_na_base()
+
+    # Verifica se a função entra_na_base retornou None (nenhuma variável pode entrar)
+    if indice_var_entrando is None:
+        print("Nenhuma variável pode entrar na base. O processo foi interrompido.")
+        return False  # Interrompe o cálculo e indica falha
+
     # Encontrar a variável que deve sair da base
     indice_var_saindo = sai_da_base(indice_var_entrando) + 1
 
@@ -151,13 +187,42 @@ def calcular():
     # Atualizar a base com a nova variável entrante
     B[indice_var_saindo - 1] = indice_var_entrando + 1
 
+    return True  # Indica sucesso no cálculo
+
+
+
+def verificar_viabilidade_base(tableau):
+    # Excluímos a primeira linha (função objetivo) e verificamos a coluna b (última coluna)
+    for linha in tableau[1:]:
+        valor_b = linha[-1]  # Última coluna da linha (valor de b)
+        if valor_b < 0:  # Se algum valor em b for negativo, a base não é viável
+            return False
+    return True  # Se todos os valores em b forem >= 0, a base é viável
+
+
+
 def solve():
-    calcular()
-    imprimir_tabela()
+    while negativo() and verificar_viabilidade_base(tabela):
+        # Se a função calcular retornar False, interrompemos o loop
+        if calcular() == False:
+            break  # Para o loop se não houver variáveis para entrar na base
+
+        # Imprime o tableau após cada iteração
+        imprimir_tabela()
+
+    # Verifica por que o loop foi interrompido
+    if not verificar_viabilidade_base(tabela):
+        print("A base se tornou inviável. O processo foi interrompido.")
+    elif not negativo():
+        print("A solução ótima foi encontrada. Não há mais variáveis negativas.")
+    else:
+        print("O processo foi interrompido pois nenhuma variável pode entrar na base.")
+
 
 
 ler_entrada('ex1.lp')
 imprimir_problema()
 solve()
-solve()
+imprimir_tabela()
+
 
