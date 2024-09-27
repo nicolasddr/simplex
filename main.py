@@ -20,7 +20,8 @@ def ler_entrada(arquivo):
         # F: cn(função objetivo)
         linha = f.readline().strip().split()
         for valor in linha[1:]:
-            c.append(float(valor))    
+            c.append(float(valor))
+        c.append(0.0)
         tabela.append(c)
 
         # R: restrições
@@ -87,25 +88,49 @@ def imprimir_tabela():
 def entra_na_base():
     pivot = min(tabela[0][:-1])
     num_var = c.index(pivot) + 1
-    print(f"Variável {num_var} deve entrar na base. Possui valor {pivot}")
-    return num_var # Índice = num_var-1
+    indice = num_var-1
+    print(f"Variável {num_var} deve entrar na base. Possui valor {pivot}. Indice={indice}")
+    return indice
 
-def sai_da_base(var_entrando):
+def sai_da_base(indice_var_entrando):
     results = {}
     for i in range(1, m_rest+1):
-        print(i)
-        if tabela[i][var_entrando-1] > 0:
-            div = tabela[i][-1]/tabela[i][var_entrando-1]
-            print(div)
+        if tabela[i][indice_var_entrando] > 0:
+            div = tabela[i][-1]/tabela[i][indice_var_entrando]
             results[i-1] = div # 'i-1' pq i começa em 1
         indice = min(results, key=results.get)
     
-    print(f"Variável {B[indice]} sai da base")
-    return B[indice]
+    print(f"Variável {B[indice]} sai da base. Indice={indice}")
+    return indice
+
+def nova_linha(linha, entrando, linha_pivot):
+    pivot = linha[entrando] * -1
+    print(f"pivot = {pivot}")
+
+    result_line = [value * pivot for value in linha_pivot] 
+    print(result_line)
+
+    new_line = []
+
+    for i in range(len(linha)):
+        sum_value = result_line[i] + linha[i]
+        new_line.append(sum_value)
+
+    print(new_line)
+    return new_line
+
+def negativo():
+    negative = False
+    for i in range(n_var):
+        if tabela[0][i] < 0:
+            negative = True
+    
+    return negative
 
 
 ler_entrada('modelo.lp')
 imprimir_problema()
-var_entrando = entra_na_base()
-sai_da_base(var_entrando)
+indice_var_entrando = entra_na_base()
+indice_var_saindo = sai_da_base(indice_var_entrando)
 imprimir_tabela()
+
