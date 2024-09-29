@@ -1,11 +1,14 @@
+import sys
 
-
+DEBUG = False
 A, b, c, B, tabela = [], [], [], [], []
 n_var = -1
 m_rest = -1
 tabela = []
 
-
+def debug(*args, **kwargs):
+    if DEBUG:
+        print("[DEBUG]", * args, **kwargs)
 
 def ler_entrada(arquivo):
     global A, b, c, B, tabela
@@ -43,45 +46,49 @@ def ler_entrada(arquivo):
         for valor in linha[1:]:
             B.append(int(valor))
 
-
 def imprimir_problema():
     global A, b, c, B
     global n_var, m_rest
 
-    print(f"n (número de variáveis): {n_var}")
-    print(f"m (número de restrições): {m_rest}")
+    debug(f"n (número de variáveis): {n_var}")
+    debug(f"m (número de restrições): {m_rest}")
 
-    print("\nVetor de custos c:")
-    print(" ".join(f"{ci:.3f}" for ci in c))
+    debug("")
+    debug("Vetor de custos c:")
+    debug(" ".join(f"{ci:.3f}" for ci in c))
 
-    print("\nMatriz A:")
+    debug("")
+    debug("Matriz A:")
     for linha in A:
-        print(" ".join(f"{aij:.3f}" for aij in linha))
+        debug(" ".join(f"{aij:.3f}" for aij in linha))
     
-    print("\nVetor b:")
-    print(" ".join(f"{bi:.3f}" for bi in b))
+    debug("")
+    debug("Vetor b:")
+    debug(" ".join(f"{bi:.3f}" for bi in b))
     
-    print("\nBase inicial B:")
-    print(" ".join(map(str, B)))
+    debug("")
+    debug("Base inicial B:")
+    debug(" ".join(map(str, B)))
+    debug("-------------------------------------------- ")
+    
 
 def imprimir_tabela():
-
-    print("   ", end="")
+    debug("   ", end="")
     for var in range(n_var):
-        print(f" x{var+1:<5} ", end="")
-    print("rhs")
+        debug(f" x{var+1:<5} ", end="")
+    debug("rhs")
 
     
-    print("z | ", end="")
+    debug("z | ", end="")
     for valor in tabela[0][:-1]:
-        print(f"{valor:<8.3f}", end="")
-    print(f"{tabela[0][-1]:<8.3f}")  
+        debug(f"{valor:<8.3f}", end="")
+    debug(f"{tabela[0][-1]:<8.3f}")  
 
     for i, linha in enumerate(tabela[1:]):   
-        print(f"{B[i]:<1} | ", end="")
+        debug(f"{B[i]:<1} | ", end="")
         for valor in linha[:-1]:  
-            print(f"{valor:<8.3f}", end="")
-        print(f"{linha[-1]:<8.3f}")  
+            debug(f"{valor:<8.3f}", end="")
+        debug(f"{linha[-1]:<8.3f}")  
 
 # PROBLEMA
 def entra_na_base():
@@ -101,14 +108,12 @@ def entra_na_base():
 
     # Se nenhum índice foi encontrado, retorna None
     if indice == -1:
-        print("Nenhuma variável pode entrar na base.")
+        debug("Nenhuma variável pode entrar na base.")
         return None
 
     num_var = indice + 1  # Converte para índice 1-based
-    print(f"Variável {num_var} deve entrar na base. Possui valor {menor_val}. Indice={indice}")
+    debug(f"Variável {num_var} deve entrar na base. Possui valor {menor_val}. Indice={indice}")
     return indice
-
-
 
 
 def sai_da_base(indice_var_entrando):
@@ -120,7 +125,7 @@ def sai_da_base(indice_var_entrando):
         if tabela[i][indice_var_entrando] > 0:  # Só consideramos coeficientes positivos
             div = tabela[i][-1] / tabela[i][indice_var_entrando]  # Calcula a razão
             # Verifica se esta divisão é a menor até agora
-            print(f"{tabela[i][-1]}/{tabela[i][indice_var_entrando]}")
+            debug(f"{tabela[i][-1]}/{tabela[i][indice_var_entrando]}")
             if div < menor_div:
                 menor_div = div
                 indice_menor_div = i-1  # Armazena o índice da menor razão
@@ -129,19 +134,18 @@ def sai_da_base(indice_var_entrando):
             results[i - 1] = div  # Usa 'i-1' para ajustar o índice
     indice = indice_menor_div  # Índice da variável que vai sair da base
     if indice != -1:
-        print(f"Variável {B[indice]} sai da base. Índice={indice}")
+        debug(f"Variável {B[indice]} sai da base. Índice={indice}")
         return indice
     else:
-        print(f"Base=None")
+        debug(f"Base=None")
         return None
-
 
 def nova_linha(linha, entrando, linha_pivot):
     pivot = linha[entrando] * -1
-    print(f"pivot = {pivot}")
+    debug(f"pivot = {pivot}")
 
     result_line = [value * pivot for value in linha_pivot] 
-    print(result_line)
+    debug(result_line)
 
     new_line = []
 
@@ -149,7 +153,7 @@ def nova_linha(linha, entrando, linha_pivot):
         sum_value = result_line[i] + linha[i]
         new_line.append(sum_value)
 
-    print(new_line)
+    debug(new_line)
     return new_line
 
 def negativo():
@@ -168,16 +172,18 @@ def calcular():
 
     # Verifica se a função entra_na_base retornou None (nenhuma variável pode entrar)
     if indice_var_entrando is None:
-        print("Nenhuma variável pode entrar na base. O processo foi interrompido.")
+        debug("Nenhuma variável pode entrar na base. O processo foi interrompido.")
         return False  # Interrompe o cálculo e indica falha
 
     # Encontrar a variável que deve sair da base
     indice_var_saindo = sai_da_base(indice_var_entrando)
 
     if indice_var_saindo is None:
-        print("Nenhuma variável pode sair da base. O processo foi interrompido.")
-        print(f"RHS = {tabela[0][-1]}")
+        debug("Nenhuma variável pode sair da base. O processo foi interrompido.")
+        debug(f"RHS = {tabela[0][-1]}")
         return False  # Interrompe o cálculo e indica falha
+
+    print("T", (indice_var_entrando+1), B[indice_var_saindo])
 
     indice_var_saindo += 1
     
@@ -214,30 +220,88 @@ def verificar_viabilidade_base(tableau):
 
 
 
+def print_solution():
+    print("X", end=" ")
+    for i in range(n_var):
+        if i+1 in B:
+            index = B.index(i+1)
+            print(f"{tabela[index+1][-1]:.3f}", end=" ")
+        else:
+            print("0.000", end=" ")
+    print("")
+
+def print_custo_reduzido():
+    print("C", end=" ")
+    for i in range(n_var):
+        if i+1 in B:
+            print("0.000", end=" ")
+        else:
+            print(f"{tabela[0][i]:.3f}", end=" ")
+    print("0.000")
+
+def print_valor():
+    print("Z", end=" ")
+    print(f"{tabela[0][-1]:.3f}")
+    
+
+
 def solve():
-    while negativo() and verificar_viabilidade_base(tabela):
-        # Se a função calcular retornar False, interrompemos o loop
-        if calcular() == False:
-            break  # Para o loop se não houver variáveis para entrar na base
+    # Não é possivel construir o tableau
+    if not negativo():
+        print("E 1")  # Imprime E 1 para indicar base inviável
+        return
+    if not verificar_viabilidade_base(tabela):
+        print("V N")
+        
+    print("V S")  # Imprime V S para indicar que a base é viável
+        
+    # Print solução representada pelo tableau (X x1 x2 x3 x4)
+    print_solution()
+    
+    # Print custo reduzido da função objetivo (C z1 z2 z3 z4)
+    print_custo_reduzido()
+    
+    # Print valor da solução de acordo com a função objetivo (Z z)
+    print_valor()
+
+    # verifica se a solução é ótima
+    if not negativo() and verificar_viabilidade_base(tabela):
+        print("O S")
+    print("O N") # Solução não é ótima
+    
+    while negativo() and verificar_viabilidade_base(tabela):        
+        # Print solução representada pelo tableau (X x1 x2 x3 x4)
+        print_solution()
+        
+        # Print custo reduzido da função objetivo (C z1 z2 z3 z4)
+        print_custo_reduzido()
+        
+        # Print valor da solução de acordo com a função objetivo (Z z)
+        print_valor()
 
         # Imprime o tableau após cada iteração
         imprimir_tabela()
+        
+        if calcular() == False:
+            break
 
     # Verifica por que o loop foi interrompido
     if not verificar_viabilidade_base(tabela):
-        print("A base se tornou inviável. O processo foi interrompido.")
+        debug("A base se tornou inviável. O processo foi interrompido.")
         return
     elif not negativo():
-        print("A solução ótima foi encontrada. Não há mais variáveis negativas.")
+        debug("A solução ótima foi encontrada. Não há mais variáveis negativas.")
         return
     else:
-        print("O processo foi interrompido pois nenhuma variável pode entrar na base.")
+        debug("O processo foi interrompido pois nenhuma variável pode entrar na base.")
         return
 
 
+# ler argumentos
+entrada = sys.argv[1]
 
-ler_entrada('ex4.lp')
-imprimir_problema()
+ler_entrada(entrada)
+imprimir_problema() 
 solve()
 
 
